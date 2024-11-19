@@ -6,7 +6,7 @@ use surrealdb::{
 };
 use tokio::time::sleep;
 
-use crate::package::Package;
+use crate::package::package::Package;
 
 static DB: LazyLock<Surreal<Client>> = LazyLock::new(Surreal::init);
 
