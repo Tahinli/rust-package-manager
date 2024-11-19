@@ -80,6 +80,16 @@ pub struct Version {
     third: u8,
 }
 
+impl Version {
+    pub fn new(first: u8, second: u8, third: u8) -> Self {
+        Version {
+            first,
+            second,
+            third,
+        }
+    }
+}
+
 impl Display for Version {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}.{}.{}", self.first, self.second, self.third)
@@ -89,4 +99,10 @@ impl Display for Version {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Publisher {
     name: String,
+}
+
+impl Publisher {
+    pub fn new(name: String) -> Self {
+        Publisher { name }
+    }
 }

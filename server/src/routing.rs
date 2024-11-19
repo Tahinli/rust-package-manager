@@ -9,17 +9,13 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use tower_http::cors::CorsLayer;
 
-use crate::{
-    database,
-    package::package::{Publisher, Version},
-    AppState,
-};
+use crate::{database, AppState};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Package {
     pub name: String,
-    pub publisher: Publisher,
-    pub version: Version,
+    pub publisher: String,
+    pub version: String,
 }
 
 pub async fn route(State(app_state): State<AppState>) -> Router {

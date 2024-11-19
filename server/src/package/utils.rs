@@ -6,10 +6,17 @@ use tokio_util::io::ReaderStream;
 
 use crate::{database, routing, PACKAGE_PATH};
 
-use super::package::Package;
+use super::package::{Package, Publisher, Version};
 
 pub async fn create_package(package: routing::Package) -> Option<Package> {
-    let package = Package::new(package.name, package.publisher, package.version);
+    let publisher = Publisher::new(package.publisher);
+    let version = package
+        .version
+        .split('.')
+        .filter_map(|splitted| splitted.parse::<u8>().ok())
+        .collect::<Vec<u8>>();
+    let version = Version::new(*version.get(0)?, *version.get(1)?, *version.get(2)?);
+    let package = Package::new(package.name, publisher, version);
     database::create_package(package).await
 }
 
