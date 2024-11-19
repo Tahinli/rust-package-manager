@@ -64,7 +64,7 @@ async fn read_package(Path(package_name): Path<String>) -> impl IntoResponse {
 
 async fn update_package(
     Path(package_name): Path<String>,
-    Json(package): Json<Package>,
+    Json(package): Json<crate::package::package::Package>,
 ) -> impl IntoResponse {
     match crate::package::utils::update_package(package_name, package).await {
         Some(package) => (StatusCode::ACCEPTED, Json(serde_json::json!(package))),

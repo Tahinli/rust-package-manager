@@ -1,8 +1,9 @@
 use std::fmt::Display;
 
 use serde::{Deserialize, Serialize};
+use sha3::{Digest, Sha3_512};
 use surrealdb::sql::Datetime;
-use tokio::fs::File;
+use tokio::{fs::File, io::AsyncReadExt};
 use tokio_util::io::ReaderStream;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -11,7 +12,8 @@ pub struct Package {
     publisher: Publisher,
     version: Version,
     size: u64,
-    hash: String,
+    hash: Vec<u8>,
+    dependencies: Vec<String>,
     publish_date_time: Datetime,
     last_update_date_time: Datetime,
     location: String,
@@ -24,38 +26,16 @@ impl Package {
             publisher,
             version,
             size: 0,
-            hash: String::default(),
+            hash: vec![],
+            dependencies: vec![],
             publish_date_time: Datetime::default(),
             last_update_date_time: Datetime::default(),
             location: String::new(),
         }
     }
+
     pub fn get_name(&self) -> String {
         self.name.to_string()
-    }
-
-    fn get_publisher_name(&self) -> String {
-        self.publisher.get_name()
-    }
-
-    fn get_version(&self) -> String {
-        self.version.to_string()
-    }
-
-    fn get_size(&self) -> u64 {
-        self.size
-    }
-
-    fn get_hash(&self) -> String {
-        self.hash.to_string()
-    }
-
-    fn get_publish_date_time(&self) -> String {
-        self.publish_date_time.to_string()
-    }
-
-    fn get_last_update_date_time(&self) -> String {
-        self.last_update_date_time.to_string()
     }
 
     pub fn get_location(&self) -> String {
@@ -68,8 +48,28 @@ impl Package {
             Err(_) => None,
         }
     }
+
     pub fn set_location(&mut self, location: &String) {
         self.location = location.to_owned()
+    }
+
+    pub fn get_dependencies(&self) -> &[String] {
+        self.dependencies.as_slice()
+    }
+
+    pub fn set_last_update_date_time(&mut self) {
+        self.last_update_date_time = Datetime::default();
+    }
+
+    pub async fn set_hash(&mut self) {
+        if let Ok(mut package_file) = File::open(self.get_location()).await {
+            let mut hasher = Sha3_512::new();
+            let mut data_buffer = vec![];
+            if let Ok(_) = package_file.read_to_end(&mut data_buffer).await {
+                hasher.update(data_buffer);
+                self.hash = hasher.finalize().to_vec();
+            }
+        }
     }
 }
 
@@ -78,23 +78,6 @@ pub struct Version {
     first: u8,
     second: u8,
     third: u8,
-}
-
-impl Version {
-    fn new(first: u8, second: u8, third: u8) -> Self {
-        Version {
-            first,
-            second,
-            third,
-        }
-    }
-
-    fn update(&mut self, first: u8, second: u8, third: u8) -> &Self {
-        self.first = first;
-        self.second = second;
-        self.third = third;
-        self
-    }
 }
 
 impl Display for Version {
@@ -106,19 +89,4 @@ impl Display for Version {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Publisher {
     name: String,
-}
-
-impl Publisher {
-    fn new(name: String) -> Self {
-        Publisher { name }
-    }
-
-    fn get_name(&self) -> String {
-        self.name.clone()
-    }
-
-    fn update(&mut self, name: String) -> &Self {
-        self.name = name;
-        self
-    }
 }
