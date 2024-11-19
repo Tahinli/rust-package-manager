@@ -30,44 +30,27 @@ pub async fn delete_package(package_name: String) -> Option<Package> {
 }
 
 pub async fn download_package(package_name: String) -> Option<ReaderStream<File>> {
-    if let Some(package) = crate::package::utils::read_package(package_name).await {
-        if let Some(package_file_stream) = package.serve().await {
-            return Some(package_file_stream);
-        }
-    }
-    None
+    let package = crate::package::utils::read_package(package_name).await?;
+    let package_file_stream = package.serve().await?;
+    Some(package_file_stream)
 }
 
 pub async fn upload_package(mut package_file: Multipart) -> Option<Package> {
-    if let Ok(package_file_part_unchecked) = package_file.next_field().await {
-        if let Some(package_file_part) = package_file_part_unchecked {
-            if let Some(package_file_name) = package_file_part.file_name() {
-                let package_file_name = package_file_name.to_owned();
-                let file_location = format!("./{}/{}", PACKAGE_PATH, package_file_name);
-                if let Ok(file_location) = PathBuf::from(file_location).canonicalize() {
-                    if let Some(file_location) = file_location.to_str() {
-                        if let Ok(package_file_data) = package_file_part.bytes().await {
-                            if let Some(mut package) =
-                                crate::package::utils::read_package(package_file_name.to_owned())
-                                    .await
-                            {
-                                if let Ok(mut file_descriptor) =
-                                    File::create_new(&file_location).await
-                                {
-                                    if let Ok(_) =
-                                        file_descriptor.write_all(&package_file_data).await
-                                    {
-                                        package.set_location(&file_location.to_string());
-                                        package.set_hash().await;
-                                        return Some(package);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    None
+    let package_file_part = package_file.next_field().await.ok()??;
+    let package_file_name = package_file_part.file_name()?.to_string();
+
+    let file_location = format!("./{}/{}", PACKAGE_PATH, package_file_name);
+    let file_location = PathBuf::from(file_location).canonicalize().ok()?;
+    let file_location = file_location.to_str()?;
+
+    let package_file_data = package_file_part.bytes().await.ok()?;
+    let mut package = crate::package::utils::read_package(package_file_name).await?;
+
+    let mut file_descriptor = File::create_new(&file_location).await.ok()?;
+    file_descriptor.write_all(&package_file_data).await.ok()?;
+
+    package.set_location(&file_location.to_string());
+    package.set_hash().await;
+
+    Some(package)
 }
