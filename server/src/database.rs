@@ -51,3 +51,7 @@ pub async fn delete_package(package_name: String) -> Option<Package> {
         .await
         .map_or_else(|_| None, |mut package| package.pop())
 }
+
+pub async fn read_all_packages() -> Option<Vec<Package>> {
+    DB.select::<Vec<Package>>("Packages").await.ok()
+}

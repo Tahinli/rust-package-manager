@@ -21,12 +21,13 @@ pub struct Package {
 pub async fn route(State(app_state): State<AppState>) -> Router {
     Router::new()
         .route("/", get(alive))
-        .route("/package", post(create_package))
-        .route("/package/:package_name", get(read_package))
-        .route("/package/:package_name", patch(update_package))
-        .route("/package/:package_name", delete(delete_package))
-        .route("/package/download/:package_name", get(download_package))
-        .route("/package/upload", post(upload_package))
+        .route("/packages", get(read_all_packages))
+        .route("/packages", post(create_package))
+        .route("/packages/:package_name", get(read_package))
+        .route("/packages/:package_name", patch(update_package))
+        .route("/packages/:package_name", delete(delete_package))
+        .route("/packages/downloads/:package_name", get(download_package))
+        .route("/packages/uploads", post(upload_package))
         .layer(CorsLayer::permissive())
         .with_state(app_state)
 }
@@ -85,6 +86,13 @@ async fn download_package(Path(package_name): Path<String>) -> impl IntoResponse
 async fn upload_package(package_file: Multipart) -> impl IntoResponse {
     match crate::package::utils::upload_package(package_file).await {
         Some(package) => (StatusCode::ACCEPTED, Json(serde_json::json!(package))),
+        None => (StatusCode::BAD_REQUEST, Json(serde_json::json!(""))),
+    }
+}
+
+async fn read_all_packages() -> impl IntoResponse {
+    match crate::package::utils::read_all_packages().await {
+        Some(packages) => (StatusCode::OK, Json(serde_json::json!(packages))),
         None => (StatusCode::BAD_REQUEST, Json(serde_json::json!(""))),
     }
 }

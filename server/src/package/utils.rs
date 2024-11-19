@@ -61,3 +61,7 @@ pub async fn upload_package(mut package_file: Multipart) -> Option<Package> {
 
     Some(package)
 }
+
+pub async fn read_all_packages() -> Option<Vec<Package>> {
+    database::read_all_packages().await
+}
