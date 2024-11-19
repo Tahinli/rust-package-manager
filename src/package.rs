@@ -1,17 +1,50 @@
 use std::fmt::Display;
 
-use sha3::Sha3_512;
 use surrealdb::Datetime;
 
 pub(crate) struct Package {
     name: String,
-    author: Publisher,
+    publisher: Publisher,
     version: Version,
     size: u64,
+    hash: String,
     publish_date_time: Datetime,
     last_update_date_time: Datetime,
-    hash: Sha3_512,
     location: String,
+}
+
+impl Package {
+    fn get_name(&self) -> String {
+        self.name.to_string()
+    }
+
+    fn get_publisher_name(&self) -> String {
+        self.publisher.get_name()
+    }
+
+    fn get_version(&self) -> String {
+        self.version.to_string()
+    }
+
+    fn get_size(&self) -> u64 {
+        self.size
+    }
+
+    fn get_hash(&self) -> String {
+        self.hash.to_string()
+    }
+
+    fn get_publish_date_time(&self) -> String {
+        self.publish_date_time.to_string()
+    }
+
+    fn get_last_update_date_time(&self) -> String {
+        self.last_update_date_time.to_string()
+    }
+
+    fn get_location(&self) -> String {
+        self.location.to_string()
+    }
 }
 
 pub(crate) struct Version {
