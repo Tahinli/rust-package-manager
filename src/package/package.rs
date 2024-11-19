@@ -68,6 +68,9 @@ impl Package {
             Err(_) => None,
         }
     }
+    pub fn set_location(&mut self, location: &String) {
+        self.location = location.to_owned()
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]

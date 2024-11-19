@@ -11,7 +11,9 @@ use crate::package::package::Package;
 static DB: LazyLock<Surreal<Client>> = LazyLock::new(Surreal::init);
 
 pub async fn establish_connection() -> Result<(), surrealdb::Error> {
-    DB.connect::<Ws>("localhost:8000").await
+    DB.connect::<Ws>("localhost:8000").await?;
+    DB.use_ns("Packages").await?;
+    DB.use_db("Packages").await
 }
 
 pub async fn is_alive() -> bool {

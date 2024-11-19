@@ -1,6 +1,6 @@
 use axum::{
     body::Body,
-    extract::{Path, State},
+    extract::{Multipart, Path, State},
     http::StatusCode,
     response::IntoResponse,
     routing::{delete, get, patch, post},
@@ -30,6 +30,7 @@ pub async fn route(State(app_state): State<AppState>) -> Router {
         .route("/package/:package_name", patch(update_package))
         .route("/package/:package_name", delete(delete_package))
         .route("/package/download/:package_name", get(download_package))
+        .route("/package/upload", post(upload_package))
         .layer(CorsLayer::permissive())
         .with_state(app_state)
 }
@@ -79,10 +80,15 @@ async fn delete_package(Path(package_name): Path<String>) -> impl IntoResponse {
 }
 
 async fn download_package(Path(package_name): Path<String>) -> impl IntoResponse {
-    if let Some(package) = crate::package::utils::read_package(package_name).await {
-        if let Some(package_file_stream) = package.serve().await {
-            return (StatusCode::OK, Body::from_stream(package_file_stream));
-        }
+    match crate::package::utils::download_package(package_name).await {
+        Some(package_file_stream) => (StatusCode::OK, Body::from_stream(package_file_stream)),
+        None => (StatusCode::BAD_REQUEST, Body::empty()),
     }
-    (StatusCode::BAD_REQUEST, Body::empty())
+}
+
+async fn upload_package(package_file: Multipart) -> impl IntoResponse {
+    match crate::package::utils::upload_package(package_file).await {
+        Some(package) => (StatusCode::ACCEPTED, Json(serde_json::json!(package))),
+        None => (StatusCode::BAD_REQUEST, Json(serde_json::json!(""))),
+    }
 }
