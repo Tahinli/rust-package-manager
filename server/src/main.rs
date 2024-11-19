@@ -1,4 +1,4 @@
-use rust_package_manager::{database, routing, AppState};
+use rust_package_manager_server::{database, routing, AppState};
 use tokio::net::TcpListener;
 
 #[tokio::main]

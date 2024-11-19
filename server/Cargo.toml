@@ -1,5 +1,5 @@
 [package]
-name = "rust-package-manager"
+name = "rust-package-manager-server"
 version = "0.1.0"
 edition = "2021"
 
