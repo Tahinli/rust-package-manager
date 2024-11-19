@@ -1,8 +1,8 @@
 use std::fmt::Display;
 
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sha3::{Digest, Sha3_512};
-use surrealdb::sql::Datetime;
 use tokio::{fs::File, io::AsyncReadExt};
 use tokio_util::io::ReaderStream;
 
@@ -14,8 +14,8 @@ pub struct Package {
     size: u64,
     hash: Vec<u8>,
     dependencies: Vec<String>,
-    publish_date_time: Datetime,
-    last_update_date_time: Datetime,
+    publish_date_time: DateTime<Utc>,
+    last_update_date_time: DateTime<Utc>,
     location: String,
 }
 
@@ -28,8 +28,8 @@ impl Package {
             size: 0,
             hash: vec![],
             dependencies: vec![],
-            publish_date_time: Datetime::default(),
-            last_update_date_time: Datetime::default(),
+            publish_date_time: Utc::now(),
+            last_update_date_time: Utc::now(),
             location: String::new(),
         }
     }
@@ -58,7 +58,7 @@ impl Package {
     }
 
     pub fn set_last_update_date_time(&mut self) {
-        self.last_update_date_time = Datetime::default();
+        self.last_update_date_time = Utc::now();
     }
 
     pub async fn set_hash(&mut self) {
