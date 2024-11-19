@@ -16,6 +16,18 @@ pub struct Package {
 }
 
 impl Package {
+    pub fn new(name: String, publisher: Publisher, version: Version) -> Self {
+        Self {
+            name,
+            publisher,
+            version,
+            size: 0,
+            hash: String::default(),
+            publish_date_time: Datetime::default(),
+            last_update_date_time: Datetime::default(),
+            location: String::new(),
+        }
+    }
     pub fn get_name(&self) -> String {
         self.name.to_string()
     }
@@ -50,7 +62,7 @@ impl Package {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub(crate) struct Version {
+pub struct Version {
     first: u8,
     second: u8,
     third: u8,
@@ -80,7 +92,7 @@ impl Display for Version {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub(crate) struct Publisher {
+pub struct Publisher {
     name: String,
 }
 
