@@ -10,8 +10,8 @@ pub async fn route(State(app_state): State<AppState>) -> Router {
         .with_state(app_state)
 }
 
-async fn alive(State(app_state): State<AppState>) -> impl IntoResponse {
-    let db_status = match database::is_alive(app_state.db_client).await {
+async fn alive() -> impl IntoResponse {
+    let db_status = match database::is_alive().await {
         true => "alive",
         false => "dead",
     };

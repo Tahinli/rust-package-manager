@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{sync::LazyLock, time::Duration};
 
 use surrealdb::{
     engine::remote::ws::{Client, Ws},
@@ -6,13 +6,15 @@ use surrealdb::{
 };
 use tokio::time::sleep;
 
-pub async fn establish_connection() -> Surreal<Client> {
-    Surreal::new::<Ws>("localhost:8000").await.unwrap()
+static DB: LazyLock<Surreal<Client>> = LazyLock::new(Surreal::init);
+
+pub async fn establish_connection() -> Result<(), surrealdb::Error> {
+    DB.connect::<Ws>("localhost:8000").await
 }
 
-pub async fn is_alive(db: Surreal<Client>) -> bool {
+pub async fn is_alive() -> bool {
     tokio::select! {
-        db_result = db.health() => { match db_result {
+        db_result = DB.health() => { match db_result {
             Ok(_) => true,
             Err(_) => false,
         } },

@@ -7,9 +7,8 @@ async fn main() {
     println!("Hello, world!");
 
     let listener = TcpListener::bind("127.0.0.1:2345").await.unwrap();
-    let app_state = AppState {
-        db_client: database::establish_connection().await,
-    };
+    database::establish_connection().await.unwrap();
+    let app_state = AppState {};
     let router = routing::route(axum::extract::State(app_state)).await;
     axum::serve(listener, router).await.unwrap();
 }
