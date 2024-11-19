@@ -6,6 +6,8 @@ use surrealdb::{
 };
 use tokio::time::sleep;
 
+use crate::package::Package;
+
 static DB: LazyLock<Surreal<Client>> = LazyLock::new(Surreal::init);
 
 pub async fn establish_connection() -> Result<(), surrealdb::Error> {
@@ -20,4 +22,11 @@ pub async fn is_alive() -> bool {
         } },
         _ = sleep(Duration::from_secs(1)) => false
     }
+}
+
+pub async fn create_package(package: Package) -> Option<Package> {
+    DB.create::<Option<Package>>(package.get_name())
+        .content(package)
+        .await
+        .unwrap()
 }

@@ -1,8 +1,10 @@
 use std::fmt::Display;
 
-use surrealdb::Datetime;
+use serde::{Deserialize, Serialize};
+use surrealdb::sql::Datetime;
 
-pub(crate) struct Package {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Package {
     name: String,
     publisher: Publisher,
     version: Version,
@@ -14,7 +16,7 @@ pub(crate) struct Package {
 }
 
 impl Package {
-    fn get_name(&self) -> String {
+    pub fn get_name(&self) -> String {
         self.name.to_string()
     }
 
@@ -47,6 +49,7 @@ impl Package {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub(crate) struct Version {
     first: u8,
     second: u8,
@@ -76,6 +79,7 @@ impl Display for Version {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub(crate) struct Publisher {
     name: String,
 }
