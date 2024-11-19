@@ -28,5 +28,24 @@ pub async fn create_package(package: Package) -> Option<Package> {
     DB.create::<Option<Package>>(package.get_name())
         .content(package)
         .await
-        .unwrap()
+        .map_or_else(|_| None, |package| package)
+}
+
+pub async fn read_package(package_name: String) -> Option<Package> {
+    DB.select::<Vec<Package>>(package_name)
+        .await
+        .map_or_else(|_| None, |mut package| package.pop())
+}
+
+pub async fn update_package(package_name: String, package: Package) -> Option<Package> {
+    DB.update::<Vec<Package>>(package_name)
+        .content(package)
+        .await
+        .map_or_else(|_| None, |mut package| package.pop())
+}
+
+pub async fn delete_package(package_name: String) -> Option<Package> {
+    DB.delete::<Vec<Package>>(package_name)
+        .await
+        .map_or_else(|_| None, |mut package| package.pop())
 }
