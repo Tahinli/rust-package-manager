@@ -19,6 +19,22 @@ pub struct Package {
     location: String,
 }
 
+impl Default for Package {
+    fn default() -> Self {
+        Self {
+            name: Default::default(),
+            publisher: Default::default(),
+            version: Default::default(),
+            size: Default::default(),
+            hash: Default::default(),
+            dependencies: Default::default(),
+            publish_date_time: Default::default(),
+            last_update_date_time: Default::default(),
+            location: Default::default(),
+        }
+    }
+}
+
 impl Package {
     pub fn new(name: String, publisher: Publisher, version: Version) -> Self {
         Self {
@@ -80,6 +96,16 @@ pub struct Version {
     third: u8,
 }
 
+impl Default for Version {
+    fn default() -> Self {
+        Self {
+            first: Default::default(),
+            second: Default::default(),
+            third: Default::default(),
+        }
+    }
+}
+
 impl Version {
     pub fn new(first: u8, second: u8, third: u8) -> Self {
         Version {
@@ -99,6 +125,14 @@ impl Display for Version {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Publisher {
     name: String,
+}
+
+impl Default for Publisher {
+    fn default() -> Self {
+        Self {
+            name: Default::default(),
+        }
+    }
 }
 
 impl Publisher {

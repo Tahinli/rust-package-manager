@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use axum::extract::Multipart;
 use tokio::{fs::File, io::AsyncWriteExt};
 use tokio_util::io::ReaderStream;
@@ -44,21 +42,20 @@ pub async fn download_package(package_name: String) -> Option<ReaderStream<File>
 
 pub async fn upload_package(mut package_file: Multipart) -> Option<Package> {
     let package_file_part = package_file.next_field().await.ok()??;
-    let package_file_name = package_file_part.file_name()?.to_string();
+    let package_file_name = package_file_part.name()?.to_string();
 
-    let file_location = format!("./{}/{}", PACKAGE_PATH, package_file_name);
-    let file_location = PathBuf::from(file_location).canonicalize().ok()?;
-    let file_location = file_location.to_str()?;
+    let file_location = format!("{}/{}", PACKAGE_PATH, package_file_name);
 
     let package_file_data = package_file_part.bytes().await.ok()?;
     let mut package = crate::package::utils::read_package(package_file_name).await?;
 
-    let mut file_descriptor = File::create_new(&file_location).await.ok()?;
+    let mut file_descriptor = File::create(&file_location).await.ok()?;
     file_descriptor.write_all(&package_file_data).await.ok()?;
 
     package.set_location(&file_location.to_string());
     package.set_hash().await;
 
+    let package = crate::package::utils::update_package(package.get_name(), package).await?;
     Some(package)
 }
 

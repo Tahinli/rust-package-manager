@@ -16,7 +16,8 @@ pub async fn read_all_packages() -> Result<Vec<Package>, Box<dyn Error>> {
         .as_array()
         .map_or(Err(""), |values| Ok(values))?
         .iter()
-        .map(|value| serde_json::from_value::<Package>(value.clone()).unwrap())
+        .map(|value| serde_json::from_value::<Package>(value.clone()).unwrap_or_default())
+        .filter(|package| !package.get_name().is_empty())
         .collect())
 }
 
@@ -34,14 +35,13 @@ pub async fn read_package(package_name: String) -> Option<Package> {
 pub async fn download_package(package_name: String) -> Option<Vec<u8>> {
     Some(
         CLIENT
-            .get(format!("{}{}/{}", URL, "/packages", package_name))
+            .get(format!("{}{}/{}", URL, "/packages/downloads", package_name))
             .send()
             .await
             .ok()?
-            .text()
+            .bytes()
             .await
             .ok()?
-            .as_bytes()
             .to_vec(),
     )
 }

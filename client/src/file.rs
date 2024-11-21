@@ -3,10 +3,11 @@ use tokio::{
     io::AsyncWriteExt,
 };
 
-const FILE_LOCATION: &str = "~/.local/share/";
+const FILE_LOCATION: &str = "./packages/";
 
 pub async fn save_package(package_name: String, package_data: &[u8]) -> Result<(), std::io::Error> {
-    let mut package_file = File::create_new(format!("{}{}", FILE_LOCATION, package_name)).await?;
+    let file_location = format!("{}{}", FILE_LOCATION, package_name);
+    let mut package_file = File::create(file_location).await?;
     package_file.write_all(package_data).await
 }
 

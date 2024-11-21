@@ -14,11 +14,10 @@ pub async fn establish_connection() -> Result<(), surrealdb::Error> {
     DB.connect::<Ws>("localhost:8000").await?;
     DB.use_ns("Packages").await?;
     DB.use_db("Packages").await?;
-    DB.query("DEFINE TABLE Packages")
-                .await.map(|_| ())?;
-    DB.query("DEFINE INDEX package_nameINDEX on TABLE Packages COLUMNS package_name UNIQUE").await.map(|_| ())
-                
-    
+    DB.query("DEFINE TABLE Packages").await.map(|_| ())?;
+    DB.query("DEFINE INDEX package_nameINDEX on TABLE Packages COLUMNS package_name UNIQUE")
+        .await
+        .map(|_| ())
 }
 
 pub async fn is_alive() -> bool {
@@ -45,7 +44,8 @@ pub async fn read_package(package_name: String) -> Option<Package> {
 pub async fn update_package(package_name: String, package: Package) -> Option<Package> {
     DB.update(("Packages", package_name))
         .content(package)
-        .await.ok()?
+        .await
+        .ok()?
 }
 
 pub async fn delete_package(package_name: String) -> Option<Package> {

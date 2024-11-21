@@ -14,6 +14,28 @@ pub struct Package {
     location: String,
 }
 
+impl Package {
+    pub fn get_name(&self) -> String {
+        self.name.clone()
+    }
+}
+
+impl Default for Package {
+    fn default() -> Self {
+        Self {
+            name: Default::default(),
+            publisher: Default::default(),
+            version: Default::default(),
+            size: Default::default(),
+            hash: Default::default(),
+            dependencies: Default::default(),
+            publish_date_time: Default::default(),
+            last_update_date_time: Default::default(),
+            location: Default::default(),
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Version {
     first: u8,
@@ -21,7 +43,25 @@ pub struct Version {
     third: u8,
 }
 
+impl Default for Version {
+    fn default() -> Self {
+        Self {
+            first: Default::default(),
+            second: Default::default(),
+            third: Default::default(),
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Publisher {
     name: String,
+}
+
+impl Default for Publisher {
+    fn default() -> Self {
+        Self {
+            name: Default::default(),
+        }
+    }
 }
