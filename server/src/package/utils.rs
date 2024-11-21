@@ -15,23 +15,49 @@ pub async fn create_package(package: routing::Package) -> Option<Package> {
         .collect::<Vec<u8>>();
     let version = Version::new(*version.get(0)?, *version.get(1)?, *version.get(2)?);
     let package = Package::new(package.name, publisher, version);
-    database::create_package(package).await
+    match database::create_package(package).await {
+        Ok(package_unchecked) => package_unchecked,
+        Err(err_val) => {
+            eprintln!("Error: Create Package | {}", err_val);
+            None
+        }
+    }
 }
 
 pub async fn read_package(package_name: String) -> Option<Package> {
-    database::read_package(package_name).await
+    match database::read_package(package_name).await {
+        Ok(package_unchecked) => package_unchecked,
+        Err(err_val) => {
+            eprintln!("Error: Read Package | {}", err_val);
+            None
+        }
+    }
 }
 
 pub async fn update_package(package_name: String, mut package: Package) -> Option<Package> {
     for dependency in package.get_dependencies() {
-        database::read_package(dependency.to_string()).await?;
+        if let Err(err_val) = database::read_package(dependency.to_string()).await {
+            eprintln!("Error: Dependency | {}", err_val);
+        }
     }
     package.set_last_update_date_time();
-    database::update_package(package_name, package).await
+    match database::update_package(package_name, package).await {
+        Ok(package_unchecked) => package_unchecked,
+        Err(err_val) => {
+            eprintln!("Error: Update Package | {}", err_val);
+            None
+        }
+    }
 }
 
 pub async fn delete_package(package_name: String) -> Option<Package> {
-    database::delete_package(package_name).await
+    match database::delete_package(package_name).await {
+        Ok(package_unchecked) => package_unchecked,
+        Err(err_val) => {
+            eprintln!("Error: Delete Package | {}", err_val);
+            None
+        }
+    }
 }
 
 pub async fn download_package(package_name: String) -> Option<ReaderStream<File>> {
@@ -60,5 +86,17 @@ pub async fn upload_package(mut package_file: Multipart) -> Option<Package> {
 }
 
 pub async fn read_all_packages() -> Option<Vec<Package>> {
-    database::read_all_packages().await
+    match database::read_all_packages().await {
+        Ok(package_unchecked) => {
+            if package_unchecked.is_empty() {
+                None
+            } else {
+                Some(package_unchecked)
+            }
+        }
+        Err(err_val) => {
+            eprintln!("Error: Read All Package | {}", err_val);
+            None
+        }
+    }
 }

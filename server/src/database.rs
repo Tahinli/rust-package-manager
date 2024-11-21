@@ -22,36 +22,37 @@ pub async fn establish_connection() -> Result<(), surrealdb::Error> {
 
 pub async fn is_alive() -> bool {
     tokio::select! {
-        db_result = DB.health() => { match db_result {
-            Ok(_) => true,
-            Err(_) => false,
-        } },
+        db_result = DB.health() => {
+            match db_result {
+                Ok(_) => true,
+                Err(_) => false,
+            }
+        },
         _ = sleep(Duration::from_secs(1)) => false
     }
 }
 
-pub async fn create_package(package: Package) -> Option<Package> {
+pub async fn create_package(package: Package) -> Result<Option<Package>, surrealdb::Error> {
     DB.create::<Option<Package>>(("Packages", package.get_name()))
         .content(package)
         .await
-        .map_or_else(|_| None, |package| package)
 }
 
-pub async fn read_package(package_name: String) -> Option<Package> {
-    DB.select(("Packages", package_name)).await.ok()?
+pub async fn read_package(package_name: String) -> Result<Option<Package>, surrealdb::Error> {
+    DB.select(("Packages", package_name)).await
 }
 
-pub async fn update_package(package_name: String, package: Package) -> Option<Package> {
-    DB.update(("Packages", package_name))
-        .content(package)
-        .await
-        .ok()?
+pub async fn update_package(
+    package_name: String,
+    package: Package,
+) -> Result<Option<Package>, surrealdb::Error> {
+    DB.update(("Packages", package_name)).content(package).await
 }
 
-pub async fn delete_package(package_name: String) -> Option<Package> {
-    DB.delete(("Packages", package_name)).await.ok()?
+pub async fn delete_package(package_name: String) -> Result<Option<Package>, surrealdb::Error> {
+    DB.delete(("Packages", package_name)).await
 }
 
-pub async fn read_all_packages() -> Option<Vec<Package>> {
-    DB.select::<Vec<Package>>("Packages").await.ok()
+pub async fn read_all_packages() -> Result<Vec<Package>, surrealdb::Error> {
+    DB.select::<Vec<Package>>("Packages").await
 }
