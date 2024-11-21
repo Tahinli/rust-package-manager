@@ -36,7 +36,7 @@ pub async fn delete_package(package_name: String) -> Option<Package> {
 
 pub async fn download_package(package_name: String) -> Option<ReaderStream<File>> {
     let package = crate::package::utils::read_package(package_name).await?;
-    let package_file_stream = package.serve().await?;
+    let package_file_stream = package.serve().await.ok()?;
     Some(package_file_stream)
 }
 
@@ -53,7 +53,7 @@ pub async fn upload_package(mut package_file: Multipart) -> Option<Package> {
     file_descriptor.write_all(&package_file_data).await.ok()?;
 
     package.set_location(&file_location.to_string());
-    package.set_hash().await;
+    package.set_hash().await.ok()?;
 
     let package = crate::package::utils::update_package(package.get_name(), package).await?;
     Some(package)

@@ -58,11 +58,9 @@ impl Package {
         self.location.to_string()
     }
 
-    pub async fn serve(&self) -> Option<ReaderStream<File>> {
-        match File::open(self.get_location()).await {
-            Ok(package_file) => Some(ReaderStream::new(package_file)),
-            Err(_) => None,
-        }
+    pub async fn serve(&self) -> Result<ReaderStream<File>, std::io::Error> {
+        let package_file = File::open(self.get_location()).await?;
+        Ok(ReaderStream::new(package_file))
     }
 
     pub fn set_location(&mut self, location: &String) {
@@ -77,15 +75,14 @@ impl Package {
         self.last_update_date_time = Utc::now();
     }
 
-    pub async fn set_hash(&mut self) {
-        if let Ok(mut package_file) = File::open(self.get_location()).await {
-            let mut hasher = Sha3_512::new();
-            let mut data_buffer = vec![];
-            if let Ok(_) = package_file.read_to_end(&mut data_buffer).await {
-                hasher.update(data_buffer);
-                self.hash = hasher.finalize().to_vec();
-            }
-        }
+    pub async fn set_hash(&mut self) -> Result<(), std::io::Error> {
+        let mut package_file = File::open(self.get_location()).await?;
+        let mut hasher = Sha3_512::new();
+        let mut data_buffer = vec![];
+        package_file.read_to_end(&mut data_buffer).await?;
+        hasher.update(data_buffer);
+        self.hash = hasher.finalize().to_vec();
+        Ok(())
     }
 }
 
