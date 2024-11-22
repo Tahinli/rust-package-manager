@@ -3,6 +3,8 @@ use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
 };
 
+use sha3::{Digest, Sha3_512};
+
 const PACKAGE_PATH: &str = "./packages/";
 
 pub async fn save_package(package_name: String, package_data: &[u8]) -> Result<(), std::io::Error> {
@@ -34,6 +36,20 @@ pub async fn list_packages() -> Option<Vec<String>> {
         return None;
     }
     Some(packages)
+}
+
+async fn calculate_hash(package_name: String) -> Result<Option<Vec<u8>>, std::io::Error> {
+    if let Some(_) = search_metadata(package_name.to_owned()).await? {
+        let file_location = format!("{}{}", PACKAGE_PATH, package_name);
+        let mut target_file = File::open(file_location).await?;
+        let mut hasher = Sha3_512::new();
+        let mut data_buffer = vec![];
+        target_file.read_to_end(&mut data_buffer).await?;
+        hasher.update(data_buffer);
+        Ok(Some(hasher.finalize().to_vec()))
+    } else {
+        Ok(None)
+    }
 }
 
 async fn search_metadata(package_name: String) -> Result<Option<usize>, std::io::Error> {
