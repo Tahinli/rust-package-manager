@@ -1,5 +1,8 @@
 use axum::extract::Multipart;
-use tokio::{fs::File, io::AsyncWriteExt};
+use tokio::{
+    fs::{DirBuilder, File},
+    io::AsyncWriteExt,
+};
 use tokio_util::io::ReaderStream;
 
 use crate::{database, routing, PACKAGE_PATH};
@@ -62,24 +65,62 @@ pub async fn delete_package(package_name: String) -> Option<Package> {
 
 pub async fn download_package(package_name: String) -> Option<ReaderStream<File>> {
     let package = crate::package::utils::read_package(package_name).await?;
-    let package_file_stream = package.serve().await.ok()?;
+    let package_file_stream = match package.serve().await {
+        Ok(package_file_stream) => package_file_stream,
+        Err(err_val) => {
+            eprintln!("Error: Download | File Stream | {}", err_val);
+            return None;
+        }
+    };
     Some(package_file_stream)
 }
 
 pub async fn upload_package(mut package_file: Multipart) -> Option<Package> {
-    let package_file_part = package_file.next_field().await.ok()??;
+    let package_file_part = match package_file.next_field().await {
+        Ok(field_unchecked) => field_unchecked?,
+        Err(err_val) => {
+            eprintln!("Error: Upload | Multipart | {}", err_val);
+            return None;
+        }
+    };
     let package_file_name = package_file_part.name()?.to_string();
 
     let file_location = format!("{}/{}", PACKAGE_PATH, package_file_name);
+    if let Err(_) = File::open(PACKAGE_PATH).await {
+        if let Err(err_val) = DirBuilder::new().create(PACKAGE_PATH).await {
+            eprintln!("Error: Upload | Create Directory | {}", err_val);
+            return None;
+        }
+    }
 
-    let package_file_data = package_file_part.bytes().await.ok()?;
+    let package_file_data = match package_file_part.bytes().await {
+        Ok(package_file_data) => package_file_data,
+        Err(err_val) => {
+            eprintln!("Error: Upload | Multipart Bytes | {}", err_val);
+            return None;
+        }
+    };
     let mut package = crate::package::utils::read_package(package_file_name).await?;
 
-    let mut file_descriptor = File::create(&file_location).await.ok()?;
-    file_descriptor.write_all(&package_file_data).await.ok()?;
+    let mut file_descriptor = match File::create(&file_location).await {
+        Ok(file_descriptor) => file_descriptor,
+        Err(err_val) => {
+            eprintln!(
+                "Error: Upload | File Descriptor | {} |{}",
+                file_location, err_val
+            );
+            return None;
+        }
+    };
+    if let Err(err_val) = file_descriptor.write_all(&package_file_data).await {
+        eprintln!("Error: Upload | File Descriptor Write | {}", err_val);
+        return None;
+    }
 
     package.set_location(&file_location.to_string());
-    package.set_hash().await.ok()?;
+    if let Err(err_val) = package.set_hash().await {
+        eprintln!("Error: Hash | {}", err_val);
+    }
 
     let package = crate::package::utils::update_package(package.get_name(), package).await?;
     Some(package)

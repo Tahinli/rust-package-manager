@@ -40,6 +40,7 @@ async fn test_save_package() {
     use crate::file::save_package;
 
     let saved_or_not = save_package("test_package".to_string(), &package_data.unwrap()[..]).await;
+    println!("{:#?}", saved_or_not);
     assert_eq!(saved_or_not.is_ok(), true);
 }
 
@@ -54,10 +55,12 @@ async fn test_delete_package() {
     use crate::file::save_package;
 
     let saved_or_not = save_package("test_package".to_string(), &package_data.unwrap()[..]).await;
+    println!("{:#?}", saved_or_not);
     assert_eq!(saved_or_not.is_ok(), true);
 
     use crate::file::delete_package;
 
     let deleted_or_not = delete_package("test_package".to_string()).await;
+    println!("{:#?}", deleted_or_not);
     assert_eq!(deleted_or_not.is_ok(), true);
 }
