@@ -21,6 +21,9 @@ impl Package {
     pub fn get_hash(&self) -> Vec<u8> {
         self.hash.to_vec()
     }
+    pub fn get_dependencies(&self) -> Vec<String> {
+        self.dependencies.to_vec()
+    }
 }
 
 impl Default for Package {

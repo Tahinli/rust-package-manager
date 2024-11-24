@@ -35,7 +35,7 @@ pub async fn user_interaction() {
                         return;
                     }
                 };
-                install_package(package_name).await;
+                install_package_with_dependencies(package_name).await;
                 return;
             }
             "delete_package" => {
@@ -93,6 +93,23 @@ async fn read_package(package_name: &String) {
         Some(package) => println!("{:#?}", package),
         None => eprintln!("Error: Package Name is Invalid"),
     }
+}
+
+async fn install_package_with_dependencies(package_name: &String) {
+    let dependencies = match crate::request::read_package(package_name.to_owned()).await {
+        Some(package) => package.get_dependencies(),
+        None => {
+            eprintln!(
+                "Error: There is No Package with This Name | {}",
+                package_name
+            );
+            return;
+        }
+    };
+    for dependency in dependencies {
+        install_package(&dependency).await;
+    }
+    install_package(package_name).await;
 }
 
 async fn install_package(package_name: &String) {
