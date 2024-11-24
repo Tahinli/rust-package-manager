@@ -18,6 +18,9 @@ impl Package {
     pub fn get_name(&self) -> String {
         self.name.clone()
     }
+    pub fn get_hash(&self) -> Vec<u8> {
+        self.hash.to_vec()
+    }
 }
 
 impl Default for Package {

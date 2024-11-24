@@ -1,11 +1,12 @@
 use tokio::{
-    fs::{read_dir, remove_file, DirBuilder, File, OpenOptions},
+    fs::{remove_file, DirBuilder, File, OpenOptions},
     io::{AsyncReadExt, AsyncWriteExt},
 };
 
 use sha3::{Digest, Sha3_512};
 
 const PACKAGE_PATH: &str = "./packages/";
+const METADATA_FILE_NAME: &str = "metadata.txt";
 
 pub async fn save_package(package_name: String, package_data: &[u8]) -> Result<(), std::io::Error> {
     let file_location = format!("{}{}", PACKAGE_PATH, package_name);
@@ -22,23 +23,25 @@ pub async fn delete_package(package_name: String) -> Result<(), std::io::Error> 
     delete_metadata(package_name).await
 }
 
-pub async fn list_packages() -> Option<Vec<String>> {
-    let mut folder_elements = read_dir(PACKAGE_PATH).await.ok()?;
-    let mut packages = vec![];
-    loop {
-        match folder_elements.next_entry().await.ok()? {
-            Some(file_entry) => packages.push(file_entry.file_name().into_string().ok()?),
-            None => break,
+pub async fn list_installed_packages() -> Result<Vec<String>, std::io::Error> {
+    let metadata_file_location = format!("{}{}", PACKAGE_PATH, METADATA_FILE_NAME);
+    let mut metadata_file = match File::open(&metadata_file_location).await {
+        Ok(metadata_file) => metadata_file,
+        Err(_) => {
+            File::create_new(&metadata_file_location).await?;
+            return Ok(vec![]);
         }
+    };
+    let mut metadata = String::default();
+    metadata_file.read_to_string(&mut metadata).await?;
+    let mut package_names = vec![];
+    for line in metadata.lines() {
+        package_names.push(line.trim_end().to_string());
     }
-
-    if packages.is_empty() {
-        return None;
-    }
-    Some(packages)
+    Ok(package_names)
 }
 
-async fn calculate_hash(package_name: String) -> Result<Option<Vec<u8>>, std::io::Error> {
+pub async fn calculate_hash(package_name: String) -> Result<Option<Vec<u8>>, std::io::Error> {
     if let Some(_) = search_metadata(package_name.to_owned()).await? {
         let file_location = format!("{}{}", PACKAGE_PATH, package_name);
         let mut target_file = File::open(file_location).await?;
@@ -53,7 +56,7 @@ async fn calculate_hash(package_name: String) -> Result<Option<Vec<u8>>, std::io
 }
 
 async fn search_metadata(package_name: String) -> Result<Option<usize>, std::io::Error> {
-    let file_location = format!("{}{}", PACKAGE_PATH, "metadata.txt");
+    let file_location = format!("{}{}", PACKAGE_PATH, METADATA_FILE_NAME);
     let mut file = match File::open(file_location.clone()).await {
         Ok(file) => file,
         Err(_) => {
@@ -75,7 +78,7 @@ async fn search_metadata(package_name: String) -> Result<Option<usize>, std::io:
 async fn search_and_retrieve_metadata(
     package_name: String,
 ) -> Result<(Option<usize>, Vec<String>), std::io::Error> {
-    let file_location = format!("{}{}", PACKAGE_PATH, "metadata.txt");
+    let file_location = format!("{}{}", PACKAGE_PATH, METADATA_FILE_NAME);
     let mut file = match File::open(file_location.clone()).await {
         Ok(file) => file,
         Err(_) => {
@@ -98,7 +101,7 @@ async fn search_and_retrieve_metadata(
 async fn save_metadata(package_name: String) -> Result<(), std::io::Error> {
     let searched = search_metadata(package_name.to_owned()).await?;
     if searched.is_none() {
-        let file_location = format!("{}{}", PACKAGE_PATH, "metadata.txt");
+        let file_location = format!("{}{}", PACKAGE_PATH, METADATA_FILE_NAME);
         let mut file = OpenOptions::new()
             .append(true)
             .create(true)
@@ -118,7 +121,7 @@ async fn delete_metadata(package_name: String) -> Result<(), std::io::Error> {
         None => return Err(std::io::ErrorKind::NotFound.into()),
     };
 
-    let file_location = format!("{}{}", PACKAGE_PATH, "metadata.txt");
+    let file_location = format!("{}{}", PACKAGE_PATH, METADATA_FILE_NAME);
     let mut file = OpenOptions::new()
         .append(false)
         .create(false)
