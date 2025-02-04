@@ -1,4 +1,4 @@
-use std::env;
+use std::{env, process::exit};
 
 use crate::file::calculate_hash;
 
@@ -9,71 +9,97 @@ fn env_collector() -> Vec<String> {
 }
 
 pub async fn user_interaction() {
+    println!("\n\n----------------------------------");
     let env_values = env_collector();
-    for (i, env_value) in env_values.iter().enumerate() {
-        match env_value.as_str() {
-            "read_all_packages" => {
-                read_all_packages().await;
-                return;
-            }
-            "read_package" => {
-                let package_name = match env_values.get(i + 1) {
-                    Some(package_name) => package_name,
-                    None => {
-                        eprintln!("Length is not enough");
-                        return;
-                    }
-                };
-                read_package(package_name).await;
-                return;
-            }
-            "install_package" => {
-                let package_name = match env_values.get(i + 1) {
-                    Some(package_name) => package_name,
-                    None => {
-                        eprintln!("Length is not enough");
-                        return;
-                    }
-                };
-                install_package_with_dependencies(package_name).await;
-                return;
-            }
-            "delete_package" => {
-                let package_name = match env_values.get(i + 1) {
-                    Some(package_name) => package_name,
-                    None => {
-                        eprintln!("Length is not enough");
-                        return;
-                    }
-                };
-                delete_package(package_name).await;
-                return;
-            }
-            "list_installed_packages" => {
-                list_installed_packages().await;
-                return;
-            }
-            "update_package" => {
-                let package_name = match env_values.get(i + 1) {
-                    Some(package_name) => package_name,
-                    None => {
-                        eprintln!("Length is not enough");
-                        return;
-                    }
-                };
-                update_package(package_name).await;
-                return;
-            }
-            "update_all_packages" => {
-                update_all_packages().await;
-                return;
-            }
-            _ => {
-                eprintln!("Need an Argument");
-                return;
-            }
+
+    match env_values.get(0).unwrap_or_else(|| exit(0)).as_str() {
+        "read_all_packages" => {
+            read_all_packages().await;
+            return;
+        }
+        "read_package" => {
+            let package_name = match env_values.get(1) {
+                Some(package_name) => package_name,
+                None => {
+                    eprintln!("Length is not enough");
+                    return;
+                }
+            };
+            read_package(package_name).await;
+            return;
+        }
+        "install_package" => {
+            let package_name = match env_values.get(1) {
+                Some(package_name) => package_name,
+                None => {
+                    eprintln!("Length is not enough");
+                    return;
+                }
+            };
+            install_package_with_dependencies(package_name).await;
+            return;
+        }
+        "delete_package" => {
+            let package_name = match env_values.get(1) {
+                Some(package_name) => package_name,
+                None => {
+                    eprintln!("Length is not enough");
+                    return;
+                }
+            };
+            delete_package(package_name).await;
+            return;
+        }
+        "list_installed_packages" => {
+            list_installed_packages().await;
+            return;
+        }
+        "update_package" => {
+            let package_name = match env_values.get(1) {
+                Some(package_name) => package_name,
+                None => {
+                    eprintln!("Length is not enough");
+                    return;
+                }
+            };
+            update_package(package_name).await;
+            return;
+        }
+        "update_all_packages" => {
+            update_all_packages().await;
+            return;
+        }
+        "help" => {
+            help().await;
+            return;
+        }
+        "--help" => {
+            help().await;
+            return;
+        }
+        _ => {
+            eprintln!("Need an Argument");
+            return;
         }
     }
+}
+
+async fn help() {
+    println!("\n\n\n");
+    println!("   Arguments                        |  Details");
+    println!("---------------------------------------------------------------------------------------------");
+    println!("   read_all_packages                |  Shows Details of All Packages from Server");
+    println!("   read_package package_name        |  Shows  Details of a Package in from Server  ");
+    println!(
+        "   install_package package_name          |  Installs a Package from Server with Dependencies "
+    );
+    println!("   delete_package package_name      |  Deletes an Installed Package from System");
+    println!("   list_installed_packages          |  Shows All Installed Packages");
+    println!("   update_package package_name      |  Updates an Installed Package");
+    println!("   update_all_packages              |  Updates All Installed Packages ");
+    println!("   help                             |  Shows Help");
+    println!("   --help                           |  Shows Help");
+    println!("\n\n\n");
 }
 
 async fn read_all_packages() {
@@ -81,7 +107,7 @@ async fn read_all_packages() {
     match packages {
         Ok(packages) => {
             for package in packages {
-                println!("{}", package.get_name());
+                println!("{}", package.get_name(),);
             }
         }
         Err(err_val) => eprintln!("Error: Read All Packages | {}", err_val),

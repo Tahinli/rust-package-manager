@@ -4,12 +4,12 @@ Package Manager with a Built in CLI Tool
 
 Server Accepts Package Management such as: Uploading, Updating, Deleting
 
-Client Commands:
+<img src=./assets/examples.png>
 
-    "read_all_packages"
-    "read_package"
-    "install_package"
-    "delete_package"
-    "list_installed_packages"
-    "update_package"
-    "update_all_packages"
+
+
+> rust-package-manager --help
+
+
+
+<img src=./assets/help.png>
